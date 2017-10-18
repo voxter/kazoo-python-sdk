@@ -119,7 +119,9 @@ class RestClientMetaClass(type):
         # has named required arguments so that it is nicely self documenting.
         # If you're having trouble following it stick a print statement in
         # around the func_definition variable and then import in a shell.
+
         required_args = list(resource_required_args)
+
         if requires_data:
             required_args.append("data")
         required_args_str = ",".join(required_args)
@@ -229,6 +231,7 @@ class Client(object):
     """
     __metaclass__ = RestClientMetaClass
     base_url = "http://api.2600hz.com:8000/v1"
+    account_id= ""
 
     _accounts_resource = RestResource("account",
                                       "/accounts/{account_id}",
@@ -241,13 +244,47 @@ class Client(object):
                                            "path": "descendants",
                                            "scope": "object"}])
 
+    _alert_resource = RestResource(
+        "alert",
+        "/accounts/{account_id}/alert/{alert_id}",
+        exclude_methods=['update'])
+
+    _blacklist_resource = RestResource(
+        "blacklist",
+        "/accounts/{account_id}/blacklists/{blacklist_id}")
+
     _callflow_resource = RestResource(
         "callflow",
         "/accounts/{account_id}/callflows/{callflow_id}")
 
+    _comment_resource = RestResource(
+        "comment",
+        "/accounts/{account_id}/comments/{comment_id}")
+
+    _connectivity_resource = RestResource(
+        "connectivity",
+        "/accounts/{account_id}/connectivity/{connectivity_id}",
+        plural_name="connectivities")
+
+    _contact_list_resource = RestResource(
+        "contact_list",
+        "/accounts/{account_id}/contact_list/{ignored}",
+         plural_name="contact_list",
+         methods=["list"])
+
+    _cdr_resource = RestResource(
+        "cdr",
+        "/accounts/{account_id}/cdrs/{cdr_id}",
+         methods=["list", "detail"])
+
     _conference_resource = RestResource(
         "conference",
         "/accounts/{account_id}/conferences/{conference_id}")
+
+    _channel_resource = RestResource(
+        "channel",
+        "/accounts/{account_id}/channel/{channel_id}",
+        exclude_methods=['delete'])
 
     _device_resource = RestResource(
         "device",
@@ -258,6 +295,11 @@ class Client(object):
         "directory",
         "/accounts/{account_id}/directories/{directory_id}",
         plural_name="directories")
+
+    _faxboxes_resource = RestResource(
+        "faxbox",
+        "/accounts/{account_id}/faxboxes/{faxbox_id}",
+        plural_name="faxboxes")
 
     _global_resources = RestResource(
         "global_resource",
@@ -285,6 +327,12 @@ class Client(object):
     _menus_resource = RestResource("menu",
                                    "/accounts/{account_id}/menus/{menu_id}")
 
+    _metaflow_resource = RestResource("metaflow",
+                                   "/accounts/{account_id}/metaflows/{metaflow_id}")
+
+    _notification_resource = RestResource("notification",
+                                   "/accounts/{account_id}/notifications/{notification_id}")
+
     _phone_number_resource = RestResource(
         "phone_number",
         "/accounts/{account_id}/phone_numbers/{phone_number}",
@@ -308,6 +356,20 @@ class Client(object):
 
     _rates_resource = RestResource("rates",
                                     "/accounts/{account_id}/rates/{rate_id}")
+
+    _registrations_resource = RestResource("registrations",
+                                   "/accounts/{account_id}/registrations/{ignored}",
+                                   methods=["list", "delete"],
+                                   plural_name="registrations" )
+
+    _resource_resource = RestResource(
+        "resource",
+        "/accounts/{account_id}/resources/{resource_id}")
+
+    _sms_resource = RestResource(
+        "sms",
+        "/accounts/{account_id}/sms/{sms_id}",
+         exclude_methods=['update'])
 
     _server_resource = RestResource(
         "server",
@@ -348,6 +410,10 @@ class Client(object):
         "webhook",
         "/accounts/{account_id}/webhooks/{webhook_id}")
 
+    _whitelabel_resource = RestResource(
+        "whitelabel",
+        "/accounts/{account_id}/whitelabel/{whitelabel_id}")
+
     def __init__(self, api_key=None, password=None, account_name=None,
                  username=None, base_url=None):
         if not api_key and not password:
@@ -380,6 +446,7 @@ class Client(object):
         if not self._authenticated:
             self.auth_data = self.auth_request.execute(self.base_url)
             self.auth_token = self.auth_data["auth_token"]
+            self.account_id = self.auth_data['data']["account_id"]
             self._authenticated = True
         return self.auth_token
 
@@ -398,6 +465,11 @@ class Client(object):
             self.authenticate()
             kwargs["token"] = self.auth_token
             return request.execute(self.base_url, **kwargs)
+
+    def get_about(self):
+        request = KazooRequest("/about", method="get")
+        return self._execute_request(request)
+
 
     def search_phone_numbers(self, prefix, quantity=10):
         request = KazooRequest("/phone_numbers", get_params={
