@@ -129,19 +129,30 @@ class RestClientMetaClass(type):
             required_args_str += ","
         get_request_args = ",".join(["{0}={0}".format(argname)
                                      for argname in required_args])
-        if request_type:
+
+        if request_type == 'get_list_request' and get_request_args:
+            get_request_string = "self.{0}.{1}({2}, request_optional_args=optional_args)".format(
+            resource_field_name, request_type, get_request_args)
+        elif request_type:
             get_request_string = "self.{0}.{1}({2})".format(
                 resource_field_name, request_type, get_request_args)
         else:
             get_req_templ = "self.{0}.get_extra_view_request(\"{1}\",{2})"
             get_request_string = get_req_templ.format(
                 resource_field_name, extra_view_name, get_request_args)
+
         if requires_data:
             func_definition = "def {0}(self, {1}): return self._execute_request({2}, data=data)".format(
                 func_name, required_args_str, get_request_string)
         else:
-            func_definition = "def {0}(self, {1}): return self._execute_request({2})".format(
-                func_name, required_args_str, get_request_string)
+            if request_type == 'get_list_request' and get_request_args:
+                func_definition = "def {0}(self, {1} optional_args=None): return self._execute_request({2} )".format(
+                    func_name, required_args_str, get_request_string)
+                #print func_definition
+            else:
+                func_definition = "def {0}(self, {1}): return self._execute_request({2})".format(
+                    func_name, required_args_str, get_request_string)
+
         func = compile(func_definition, __file__, 'exec')
         d = {}
         exec func in d
@@ -514,5 +525,5 @@ class Client(object):
     def list_child_accounts(self, parentAccountId):
         request = KazooRequest("/accounts/{account_id}/children")
         request.auth_required = True
-
         return self._execute_request(request, account_id=parentAccountId)
+
