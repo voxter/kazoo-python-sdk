@@ -244,6 +244,11 @@ class Client(object):
     base_url = "http://api.2600hz.com:8000/v1"
     account_id= ""
 
+    _access_list_resource = RestResource(
+        "access_list",
+        "/accounts/{account_id}/blacklists/{blacklist_id}")
+
+
     _accounts_resource = RestResource("account",
                                       "/accounts/{account_id}",
                                       exclude_methods=[],
@@ -255,18 +260,49 @@ class Client(object):
                                            "path": "descendants",
                                            "scope": "object"}])
 
+    _acdc_call_stat_resource = RestResource(
+        "acdc_call_stat",
+        "/accounts/{account_id}/acdc_call_stats/{ignored}",
+        methods=['list']
+        )
+
+    _acl_resource = RestResource(
+        "access_list",
+        "/accounts/{account_id}/blacklists/{blacklist_id}")
+
     _alert_resource = RestResource(
         "alert",
         "/accounts/{account_id}/alert/{alert_id}",
         exclude_methods=['update'])
 
+    _apps_link_resource = RestResource(
+        "apps_link",
+        "/accounts/{account_id}/apps_link/authorize/{ignored}",
+        plural_name="apps_link",
+        methods=['list'])
+
     _blacklist_resource = RestResource(
         "blacklist",
         "/accounts/{account_id}/blacklists/{blacklist_id}")
 
+    _bulk_resource = RestResource(
+        "bulk",
+        "/accounts/{account_id}/bulk}",
+        plural_name="bulk",
+        methods=['list'])
+
+    _call_inspector_resource = RestResource(
+        "call_inspector",
+        "/accounts/{account_id}/call_inspector/{call_id}",
+        methods=['list', 'detail'])
+
     _callflow_resource = RestResource(
         "callflow",
         "/accounts/{account_id}/callflows/{callflow_id}")
+
+    _cccp_resource = RestResource(
+        "cccp",
+        "/accounts/{account_id}/cccps/{cccp_id}")
 
     _comment_resource = RestResource(
         "comment",
@@ -312,6 +348,12 @@ class Client(object):
         "/accounts/{account_id}/faxboxes/{faxbox_id}",
         plural_name="faxboxes")
 
+    _freeswitch_resource = RestResource(
+        "freeswitch",
+        "/accounts/{account_id}/freeswitch/{ignored}",
+        plural_name="freeswitch",
+        methods=["list"])
+
     _global_resources = RestResource(
         "global_resource",
         "/accounts/{account_id}/global_resources/{resource_id}")
@@ -341,6 +383,10 @@ class Client(object):
     _metaflow_resource = RestResource("metaflow",
                                    "/accounts/{account_id}/metaflows/{metaflow_id}")
 
+    _migration_resource = RestResource("migration",
+                                      "/accounts/{account_id}/migrations/{migration_id}",
+                                       methods=['list','detail','update'])
+
     _notification_resource = RestResource("notification",
                                    "/accounts/{account_id}/notifications/{notification_id}")
 
@@ -365,6 +411,21 @@ class Client(object):
     _queues_resource = RestResource("queue",
                                     "/accounts/{account_id}/queues/{queue_id}")
 
+    _parked_call_resource = RestResource(
+        "parked_call",
+        "/accounts/{account_id}/parked_calls/{ignored}",
+        methods=['list'])
+
+    _pivot_resource = RestResource(
+        "resource",
+        "/accounts/{account_id}/pivot/debug/{call_id}",
+        plural_name='pivot',
+        methods=['list','detail'],
+        method_names={
+            "list": "get_pivots_debug",
+            "detail": "get_pivot_call_debug"
+        })
+
     _rates_resource = RestResource("rates",
                                     "/accounts/{account_id}/rates/{rate_id}")
 
@@ -381,6 +442,10 @@ class Client(object):
         "sms",
         "/accounts/{account_id}/sms/{sms_id}",
          exclude_methods=['update'])
+
+    _skel_resource = RestResource(
+        "skel",
+        "/accounts/{account_id}/skels/{skel_id}")
 
     _server_resource = RestResource(
         "server",
@@ -421,9 +486,16 @@ class Client(object):
         "webhook",
         "/accounts/{account_id}/webhooks/{webhook_id}")
 
+    _websockets_resource = RestResource(
+        "websocket",
+        "/accounts/{account_id}/websockets/{websocket_id}",
+        methods=['list','detail'])
+
     _whitelabel_resource = RestResource(
         "whitelabel",
-        "/accounts/{account_id}/whitelabel/{whitelabel_id}")
+        "/accounts/{account_id}/whitelabel/{whitelabel_id}",
+        plural_name="whitelabel"
+        )
 
     def __init__(self, api_key=None, password=None, account_name=None,
                  username=None, base_url=None):
@@ -480,7 +552,6 @@ class Client(object):
     def get_about(self):
         request = KazooRequest("/about", method="get")
         return self._execute_request(request)
-
 
     def search_phone_numbers(self, prefix, quantity=10):
         request = KazooRequest("/phone_numbers", get_params={
