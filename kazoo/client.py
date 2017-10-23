@@ -22,6 +22,7 @@ class RestClientMetaClass(type):
         cls._generate_get_object_func(resource_field_name, rest_resource)
         cls._generate_delete_object_func(resource_field_name, rest_resource)
         cls._generate_update_object_func(resource_field_name, rest_resource)
+        cls._generate_partial_update_object_func(resource_field_name, rest_resource)
         cls._generate_create_object_func(resource_field_name, rest_resource)
         for view_desc in rest_resource.extra_views:
             cls._generate_extra_view_func(view_desc, resource_field_name,
@@ -92,15 +93,29 @@ class RestClientMetaClass(type):
             requires_data=True)
         setattr(cls, func_name, func)
 
+    def _generate_partial_update_object_func(cls, resource_field_name, rest_resource):
+        if "partial_update" not in rest_resource.methods:
+            return
+        func_name = rest_resource.method_names["partial_update"]
+        required_args = rest_resource.required_args + \
+            [rest_resource.object_arg]
+        func = cls._generate_resource_func(
+            func_name,
+            resource_field_name,
+            required_args,
+            request_type='get_partial_update_object_request',
+            requires_data=True)
+        setattr(cls, func_name, func)
+
     def _generate_extra_view_func(cls, extra_view_desc, resource_field_name,
                                   rest_resource):
         func_name = extra_view_desc["name"]
-        if extra_view_desc["scope"] == "aggregate":
+        if extra_view_desc["scope"] in [ "aggregate", "system"]:
             required_args = rest_resource.required_args
         else:
             required_args = rest_resource.required_args + \
                 [rest_resource.object_arg]
-        if extra_view_desc["method"] in ["put", "post"]:
+        if extra_view_desc["method"] in ["put", "post", "patch"]:
             requires_data=True
         else:
             requires_data = False
@@ -148,7 +163,6 @@ class RestClientMetaClass(type):
             if request_type == 'get_list_request' and get_request_args:
                 func_definition = "def {0}(self, {1} optional_args=None): return self._execute_request({2} )".format(
                     func_name, required_args_str, get_request_string)
-                #print func_definition
             else:
                 func_definition = "def {0}(self, {1}): return self._execute_request({2})".format(
                     func_name, required_args_str, get_request_string)
@@ -287,7 +301,7 @@ class Client(object):
 
     _bulk_resource = RestResource(
         "bulk",
-        "/accounts/{account_id}/bulk}",
+        "/accounts/{account_id}/bulk/{ingored}",
         plural_name="bulk",
         methods=['list'])
 
@@ -303,6 +317,15 @@ class Client(object):
     _cccp_resource = RestResource(
         "cccp",
         "/accounts/{account_id}/cccps/{cccp_id}")
+
+    _channel_resource = RestResource(
+        "channel",
+        "/accounts/{account_id}/channel/{channel_id}",
+        exclude_methods=['delete'])
+
+    _conference_resource = RestResource(
+        "conference",
+        "/accounts/{account_id}/conferences/{conference_id}")
 
     _comment_resource = RestResource(
         "comment",
@@ -323,15 +346,6 @@ class Client(object):
         "cdr",
         "/accounts/{account_id}/cdrs/{cdr_id}",
          methods=["list", "detail"])
-
-    _conference_resource = RestResource(
-        "conference",
-        "/accounts/{account_id}/conferences/{conference_id}")
-
-    _channel_resource = RestResource(
-        "channel",
-        "/accounts/{account_id}/channel/{channel_id}",
-        exclude_methods=['delete'])
 
     _device_resource = RestResource(
         "device",
@@ -360,6 +374,10 @@ class Client(object):
 
     _groups_resource = RestResource("group",
                                    "/accounts/{account_id}/groups/{group_id}")
+
+    _ip_resource = RestResource("ip",
+                                 "/accounts/{account_id}/ips/{ip}",
+                                 methods=["list"])
 
     _limits_resource = RestResource("limit",
                                     "/accounts/{account_id}/limits/{ignored}",
@@ -426,8 +444,18 @@ class Client(object):
             "detail": "get_pivot_call_debug"
         })
 
+    _presence_resource = RestResource(
+        "presence",
+        "/accounts/{account_id}/presence/{ext_id}",
+        plural_name='presence',
+        methods=['list','update'])
+
     _rates_resource = RestResource("rates",
                                     "/accounts/{account_id}/rates/{rate_id}")
+
+    _recording_resource = RestResource("recording",
+                                           "/accounts/{account_id}/recordings/{record_id}",
+                                           methods=["list", "detail"])
 
     _registrations_resource = RestResource("registrations",
                                    "/accounts/{account_id}/registrations/{ignored}",
@@ -437,15 +465,6 @@ class Client(object):
     _resource_resource = RestResource(
         "resource",
         "/accounts/{account_id}/resources/{resource_id}")
-
-    _sms_resource = RestResource(
-        "sms",
-        "/accounts/{account_id}/sms/{sms_id}",
-         exclude_methods=['update'])
-
-    _skel_resource = RestResource(
-        "skel",
-        "/accounts/{account_id}/skels/{skel_id}")
 
     _server_resource = RestResource(
         "server",
@@ -461,6 +480,43 @@ class Client(object):
              "method": "put"},
             {"name": "get_server_log", "path": "log"}
         ])
+
+    _services_resource = RestResource(
+        "service",
+        "/accounts/{account_id}/service/{service_id}",
+        methods=["list"],
+        extra_views=[
+            {"name": "get_deployment",
+             "path": "deployment",
+             "scope": "object"},
+            {"name": "create_deployment",
+             "path": "deployment",
+             "scope": "object",
+             "method": "put"},
+            {"name": "get_server_log", "path": "log"}
+        ])
+
+    _schema_resource = RestResource(
+        "schema",
+        "/accounts/{account_id}/schemas/{schema_id}",
+         methods=['list','detail'],
+         extra_views=[{
+             "name": "validate_schema",
+             "scope": "object",
+             "method": "put",
+             "path": "validate"
+         }])
+
+    _sms_resource = RestResource(
+        "sms",
+        "/accounts/{account_id}/sms/{sms_id}",
+         exclude_methods=['update'],
+         plural_name="sms")
+
+    _skel_resource = RestResource(
+        "skel",
+        "/accounts/{account_id}/skels/{skel_id}")
+
 
     _temporal_rules_resource = RestResource(
         "temporal_rule",
@@ -489,7 +545,13 @@ class Client(object):
     _websockets_resource = RestResource(
         "websocket",
         "/accounts/{account_id}/websockets/{websocket_id}",
-        methods=['list','detail'])
+        methods=['list','detail'],
+        extra_views=[{
+            "name": "get_system_websockets",
+            "path": "websockets",
+            "scope": "system"
+        }]
+    )
 
     _whitelabel_resource = RestResource(
         "whitelabel",
@@ -548,6 +610,8 @@ class Client(object):
             self.authenticate()
             kwargs["token"] = self.auth_token
             return request.execute(self.base_url, **kwargs)
+        except ValueError:
+            return ''
 
     def get_about(self):
         request = KazooRequest("/about", method="get")
@@ -598,3 +662,9 @@ class Client(object):
         request.auth_required = True
         return self._execute_request(request, account_id=parentAccountId)
 
+    def run_sup_command(self, *args):
+        path='/sup/'
+        for i in args:
+            path += i+'/'
+        request = KazooRequest(path[:-1])
+        return self._execute_request(request)
