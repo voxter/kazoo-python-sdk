@@ -257,10 +257,12 @@ class Client(object):
     __metaclass__ = RestClientMetaClass
     base_url = "http://api.2600hz.com:8000/v1"
     account_id= ""
-
+    """
+    
+    """
     _access_list_resource = RestResource(
         "access_list",
-        "/accounts/{account_id}/blacklists/{blacklist_id}")
+        "/accounts/{account_id}/access_lists/{access_list_id}")
 
 
     _accounts_resource = RestResource("account",
@@ -273,31 +275,77 @@ class Client(object):
                                           {"name": "get_account_descendants",
                                            "path": "descendants",
                                            "scope": "object"}])
-
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/acdc_call_stats
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/acdc_call_stats?created_from={FROM_TIMESTAMP}&created_to={TO_TIMESTAMP}
+    Support only GET method 
+    Call:
+        get_acdc_call_stats(account_id)
+    """
     _acdc_call_stat_resource = RestResource(
         "acdc_call_stat",
         "/accounts/{account_id}/acdc_call_stats/{ignored}",
         methods=['list']
         )
 
-    _acl_resource = RestResource(
-        "access_list",
-        "/accounts/{account_id}/blacklists/{blacklist_id}")
 
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/acls
+    Support only GET method
+    Call:
+        get_acls(account_id)
+    """
+    _acl_resource = RestResource(
+        "acl",
+        "/accounts/{account_id}/acls/{ignored}",
+        methods=['list']
+    )
+
+
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/alerts
+    Support GET,PUT, DELETE methods
+       Call:
+           create_alert(account_id, data)
+           list_alerts(account_id)
+           get_alert(account_id, alert_id)
+           delete_alert(account_id, alert_id)
+    """
     _alert_resource = RestResource(
         "alert",
         "/accounts/{account_id}/alert/{alert_id}",
-        exclude_methods=['update'])
+        exclude_methods=['update', 'partial_update'])
 
+
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/apps_link/authorize
+    Support only GET method
+       Call:
+           list_apps_link(account_id)
+           
+    """
     _apps_link_resource = RestResource(
         "apps_link",
         "/accounts/{account_id}/apps_link/authorize/{ignored}",
         plural_name="apps_link",
         methods=['list'])
 
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/blacklists
+    Support GET,PUT, DELETE, POST, PATH methods
+       Call:
+           create_blacklist(account_id, data)
+           list_blacklists(account_id)
+           get_blacklist(account_id, blacklist_id)
+           delete_blacklist(account_id, blacklist_id)
+           update_blacklist(account_id, blacklist_id, data)
+           partial_update_blacklist(account_id, blacklist_id, data)
+    """
     _blacklist_resource = RestResource(
         "blacklist",
-        "/accounts/{account_id}/blacklists/{blacklist_id}")
+        "/accounts/{account_id}/blacklists/{blacklist_id}"
+    )
+
 
     _bulk_resource = RestResource(
         "bulk",
@@ -305,18 +353,57 @@ class Client(object):
         plural_name="bulk",
         methods=['list'])
 
+
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/call_inspector
+    Support only GET methods
+       Call:
+           list_calls(account_id)
+           get_call(account_id, call_id)
+    """
     _call_inspector_resource = RestResource(
         "call_inspector",
         "/accounts/{account_id}/call_inspector/{call_id}",
-        methods=['list', 'detail'])
+        methods=['list', 'detail'],
+        plural_name='call_inspector',
+        method_names={
+            "list": "list_calls",
+            "detail": "get_call"
+        }
 
+    )
+
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/callflows
+    Support GET,PUT, DELETE, POST, PATH methods
+       Call:
+           create_callflow(account_id, data)
+           list_callflows(account_id)
+           get_callflow(account_id, callflow_id)
+           delete_callflow(account_id, callflow_id)
+           update_callflow(account_id, callflow_id, data)
+           partial_update_callflow(account_id, callflow_id, data)
+    """
     _callflow_resource = RestResource(
         "callflow",
         "/accounts/{account_id}/callflows/{callflow_id}")
 
+    """ 
+        http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/cccps
+        Support GET,PUT, DELETE, POST methods
+           Call:
+               create_cccp(account_id, data)
+               list_cccps(account_id)
+               get_cccp(account_id, blacklist_id)
+               delete_cccp(account_id, blacklist_id)
+               update_cccp(account_id, blacklist_id, data)
+        """
     _cccp_resource = RestResource(
         "cccp",
-        "/accounts/{account_id}/cccps/{cccp_id}")
+        "/accounts/{account_id}/cccps/{cccp_id}",
+        exclude_methods=['partial_update']
+    )
+
 
     _channel_resource = RestResource(
         "channel",
@@ -329,19 +416,52 @@ class Client(object):
 
     _comment_resource = RestResource(
         "comment",
-        "/accounts/{account_id}/comments/{comment_id}")
+        "/accounts/{account_id}/comments/{comment_id}",
+        exclude_methods=['partial_update'],
+        extra_views=[{
+            "name": "delete_all",
+            "path": "",
+            "method": "delete"
+        }]
+    )
 
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/connectivity
+    Support GET,PUT, DELETE, POST, PATH methods
+       Call:
+           create_connectivity(account_id, data)
+           list_connectivities(account_id)
+           get_connectivity(account_id, connectivity_id)
+           delete_connectivity(account_id, connectivity_id)
+           update_connectivity(account_id, connectivity_id, data)
+           partial_update_connectivity(account_id, connectivity_id, data)
+    """
     _connectivity_resource = RestResource(
         "connectivity",
         "/accounts/{account_id}/connectivity/{connectivity_id}",
         plural_name="connectivities")
 
+
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/contact_list
+    Support only GET methods
+       Call:
+           list_contact_list(account_id)
+    """
     _contact_list_resource = RestResource(
         "contact_list",
         "/accounts/{account_id}/contact_list/{ignored}",
          plural_name="contact_list",
          methods=["list"])
 
+
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/cdrs
+    Support only GET methods
+       Call:
+           list_cdrs(account_id)
+           get_cdr(account_id, cdr_id)
+    """
     _cdr_resource = RestResource(
         "cdr",
         "/accounts/{account_id}/cdrs/{cdr_id}",
@@ -352,6 +472,18 @@ class Client(object):
         "/accounts/{account_id}/devices/{device_id}",
         extra_views=[{"name": "get_all_devices_status", "path": "status"}])
 
+
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/directories
+    Support GET,PUT, DELETE, POST, PATH methods
+       Call:
+           create_directory(account_id, data)
+           list_directories(account_id)
+           get_directory(account_id, directory_id)
+           delete_directory(account_id, directory_id)
+           update_directoryy(account_id, directory_id, data)
+           partial_update_directory(account_id, directory_id, data)
+    """
     _directories_resource = RestResource(
         "directory",
         "/accounts/{account_id}/directories/{directory_id}",
@@ -362,6 +494,12 @@ class Client(object):
         "/accounts/{account_id}/faxboxes/{faxbox_id}",
         plural_name="faxboxes")
 
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/freeswitch
+    Support only GET methods
+       Call:
+           list_freeswitch(account_id)
+    """
     _freeswitch_resource = RestResource(
         "freeswitch",
         "/accounts/{account_id}/freeswitch/{ignored}",
@@ -375,10 +513,50 @@ class Client(object):
     _groups_resource = RestResource("group",
                                    "/accounts/{account_id}/groups/{group_id}")
 
+    """ 
+        http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/directories
+        Support GET,PUT, DELETE, POST, PATH methods
+           Call:
+               create_ip(account_id, data) superadmin only
+               list_ips(account_id)
+               get_ip(account_id, ip)
+               delete_ip(account_id, directory_id)
+               update_ip(account_id, directory_id, data)
+               get_hosts(account_id)
+               get_zones(account_id)
+               get_assigned(account_id)
+               assigned(account,data)
+        """
     _ip_resource = RestResource("ip",
                                  "/accounts/{account_id}/ips/{ip}",
-                                 methods=["list"])
+                                exclude_methods=['partial_update'],
+                                extra_views=[
+                                {
+                                    "name":"get_hosts",
+                                    "path":"hosts"
+                                },
+                                {
+                                    "name":"get_zones",
+                                    "path":"zones"
+                                },
+                                {
+                                    "name": "get_assigned",
+                                    "path": "assigned"
+                                },
+                                {
+                                    "name": "assigned",
+                                    "method": "post",
+                                    "path": ""
+                                }
+                                ])
 
+
+    """ 
+    http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/cdrs
+    Support only GET methods
+       Call:
+           list_limits(account_id)
+    """
     _limits_resource = RestResource("limit",
                                     "/accounts/{account_id}/limits/{ignored}",
                                     methods=["list"])
@@ -457,10 +635,10 @@ class Client(object):
                                            "/accounts/{account_id}/recordings/{record_id}",
                                            methods=["list", "detail"])
 
-    _registrations_resource = RestResource("registrations",
+    _registrations_resource = RestResource("registration",
                                    "/accounts/{account_id}/registrations/{ignored}",
-                                   methods=["list", "delete"],
-                                   plural_name="registrations" )
+                                   methods=["list"]
+                                   )
 
     _resource_resource = RestResource(
         "resource",
