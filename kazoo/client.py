@@ -262,7 +262,19 @@ class Client(object):
     """
     _access_list_resource = RestResource(
         "access_list",
-        "/accounts/{account_id}/access_lists/{access_list_id}")
+        "/accounts/{account_id}/access_lists/{access_list_id}",
+        methods=["list"],
+        extra_views=[{
+            "name": "update_all",
+            "method": "post",
+            "path": ""
+        },{
+            "name": "delete_all",
+            "method": "delete",
+            "path": ""
+        }
+        ]
+    )
 
 
     _accounts_resource = RestResource("account",
@@ -301,6 +313,43 @@ class Client(object):
         methods=['list']
     )
 
+    _agent_resource = RestResource(
+        "agent",
+        "/accounts/{account_id}/agents/{agent_id}",
+        methods=['list', 'detail'],
+        extra_views=[{
+            "name": "get_stats",
+            "path": "stats"
+        },{
+            "name": "get_statuses",
+            "path": "statuses"
+        },{
+            "name": "get_queue_status",
+            "path": "queue_status",
+            "scope": "object"
+        },{
+            "name": "set_queue_status",
+            "path": "queue_status",
+            "scope": "object",
+            "method": "post"
+        },{
+            "name": "set_agent_status",
+            "path": "status",
+            "method": "post",
+            "scope": "object"
+        },{
+            "name": "get_agent_status",
+            "path": "status",
+            "scope": "object"
+        },{
+            "name": "set_status_agent",
+            "path": "status/{agent_id}",
+            "method": "post"
+        },{
+            "name": "get_status_agent",
+            "path": "status/{agent_id}"
+        }]
+    )
 
     """ 
     http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/alerts
@@ -410,9 +459,62 @@ class Client(object):
         "/accounts/{account_id}/channel/{channel_id}",
         exclude_methods=['delete'])
 
+    _clicktocall_resource = RestResource(
+        "channel",
+        "/accounts/{account_id}/clicktocall/{clicktocall_id}",
+        plural_name="clicktocall",
+        extra_views=[{
+            "name": "get_clicktocall_history",
+            "scope": "object",
+            "path": "history"
+        },{
+            "name": "clicktocall_connect",
+            "scope": "object",
+            "path": "connect",
+            "method": "post"
+        }]
+        )
+
     _conference_resource = RestResource(
         "conference",
-        "/accounts/{account_id}/conferences/{conference_id}")
+        "/accounts/{account_id}/conferences/{conference_id}",
+        extra_views=[{
+            "name": "conference_action",
+            "path": "",
+            "scope": "object",
+            "method": "put"
+        },{
+            "name": "list_participants",
+            "path": "participants",
+            "scope": "object"
+        },{
+            "name": "action_participants",
+            "path": "participants",
+            "scope": "object",
+            "method": "put"
+        },{
+            "name": "list_participant",
+            "path": "participants/{participant_id}",
+            "scope": "object"
+        },{
+            "name": "action_participant",
+            "path": "participants/{participant_id}",
+            "scope": "object",
+            "method": "put"
+        }]
+    )
+
+    _config_resource = RestResource(
+        "config",
+        "/accounts/{account_id}/configs/{config_id}",
+        exclude_methods=['list','create'],
+        extra_views=[{
+            "name": "create_config",
+            "method": "put",
+            "path": "",
+            "scope": "object"
+        }]
+    )
 
     _comment_resource = RestResource(
         "comment",
@@ -584,7 +686,29 @@ class Client(object):
                                        methods=['list','detail','update'])
 
     _notification_resource = RestResource("notification",
-                                   "/accounts/{account_id}/notifications/{notification_id}")
+                                   "/accounts/{account_id}/notifications/{notification_id}",
+                                          exclude_methods="partial_update",
+                                          extra_views=[{
+                                              "name": "preview",
+                                              "path": "preview",
+                                              "scope": "object"
+                                          },{
+                                              "name": "delete_all",
+                                              "path": "",
+                                              "method": "delete"
+                                          },{
+                                              "name": "customer_update",
+                                              "path": "customer_update/message",
+                                              "method": "post"
+                                          },{
+                                              "name": "list_smtp_logs",
+                                              "path": "smtp_log"
+                                          },{
+                                              "name": "get_smtp_log",
+                                              "path": "smtplog/{smtp_log_id}"
+                                          }
+                                          ]
+                                          )
 
     _phone_number_resource = RestResource(
         "phone_number",
@@ -605,7 +729,43 @@ class Client(object):
              "method": "put"}])
 
     _queues_resource = RestResource("queue",
-                                    "/accounts/{account_id}/queues/{queue_id}")
+                                    "/accounts/{account_id}/queues/{queue_id}",
+                                    extra_views=[{
+                                        "name": "get_stats",
+                                        "path": "stats"
+                                    },{
+                                        "name": "get_queue_stats",
+                                        "scope": "object",
+                                        "path": "stats"
+                                    },{
+                                        "name": "get_queue_stats_realtime",
+                                        "scope": "object",
+                                        "path": "stats/realtime"
+                                    },{
+                                        "name": "get_roster",
+                                        "scope": "object",
+                                        "path": "roster"
+                                    },{
+                                        "name": "add_roster",
+                                        "scope": "object",
+                                        "path": "roster",
+                                        "method": "post"
+                                    },{
+                                        "name": "delete_roster",
+                                        "scope": "object",
+                                        "path": "roster",
+                                        "method": "delete"
+                                    },{
+                                        "name": "create_eavesdrop",
+                                        "path": "eavesdrop",
+                                        "method": "put"
+                                    },{
+                                        "name": "create_queue_eavesdrop",
+                                        "path": "eavesdrop",
+                                        "scope": "object",
+                                        "method": "put"
+                                    }]
+                                    )
 
     _parked_call_resource = RestResource(
         "parked_call",
@@ -629,7 +789,16 @@ class Client(object):
         methods=['list','update'])
 
     _rates_resource = RestResource("rates",
-                                    "/accounts/{account_id}/rates/{rate_id}")
+                                    "/accounts/{account_id}/rates/{rate_id}",
+                                   extra_views=[{
+                                       "name": "upload_rate",
+                                       "path": "",
+                                       "method": "post"
+                                   },{
+                                       "name": "number_rate",
+                                       "path": "rates/number/{phone_number}"
+                                   }]
+                                   )
 
     _recording_resource = RestResource("recording",
                                            "/accounts/{account_id}/recordings/{record_id}",
@@ -637,12 +806,36 @@ class Client(object):
 
     _registrations_resource = RestResource("registration",
                                    "/accounts/{account_id}/registrations/{ignored}",
-                                   methods=["list"]
+                                   methods=["list"],
+                                   extra_views=[{
+                                       "name": "delete_registrations",
+                                       "method": "delete",
+                                       "path": ""
+                                   }]
                                    )
 
     _resource_resource = RestResource(
         "resource",
-        "/accounts/{account_id}/resources/{resource_id}")
+        "/accounts/{account_id}/resources/{resource_id}",
+        extra_views=[{
+            "name": "list_jobs",
+            "path": "jobs"
+        },{
+            "name": "create_job",
+            "method": "put",
+            "path": "jobs"
+        },{
+            "name": "get_job",
+            "path": "jobs/{job_id}"
+        },{
+            "name": "create_collection",
+            "path": "collection",
+            "method": "put"
+        },{
+            "name": "update_collection",
+            "path": "collection",
+            "method": "post"
+        }])
 
     _server_resource = RestResource(
         "server",
@@ -695,10 +888,37 @@ class Client(object):
         "skel",
         "/accounts/{account_id}/skels/{skel_id}")
 
-
     _temporal_rules_resource = RestResource(
         "temporal_rule",
         "/accounts/{account_id}/temporal_rules/{rule_id}")
+
+    _temporal_rules_sets_resource = RestResource(
+        "temporal_rules_set",
+        "/accounts/{account_id}/temporal_rules_sets/{temporal_rule_set}")
+
+    _transactions_resource = RestResource(
+        "transaction",
+        "/accounts/{account_id}/transactions/{ignored}",
+        methods=['list'],
+        extra_views=[{
+            "name": "get_current_balance",
+            "path": "current_balance"
+        },{
+            "name": "get_subscriptions",
+            "path": "subscriptions"
+        },{
+            "name": "get_monthly",
+            "path": "monthly_recurring"
+        },{
+            "name": "add_credit",
+            "path": "credit",
+            "method": "put"
+        },{
+            "name": "remove_credit",
+            "path": "debit",
+            "method": "delete"
+        }]
+    )
 
     _users_resource = RestResource(
         "user",
@@ -718,7 +938,25 @@ class Client(object):
 
     _webhook_resource = RestResource(
         "webhook",
-        "/accounts/{account_id}/webhooks/{webhook_id}")
+        "/accounts/{account_id}/webhooks/{webhook_id}",
+        extra_views=[{
+            "name": "get_attempts",
+            "path": "attempts"
+        }, {
+            "name": "get_attempt",
+            "scope": "object",
+            "path": "attempts"
+        },{
+            "name": "enbale_webhooks",
+            "path": "",
+            "method": "patch"
+        },{
+            "name": "enbale_webhooks",
+            "path": "webhooks",
+            "scope": "system"
+        }]
+
+    )
 
     _websockets_resource = RestResource(
         "websocket",
