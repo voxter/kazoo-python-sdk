@@ -279,14 +279,34 @@ class Client(object):
 
     _accounts_resource = RestResource("account",
                                       "/accounts/{account_id}",
-                                      exclude_methods=[],
+                                      exclude_methods=['list'],
                                       extra_views=[
                                           {"name": "get_account_children",
                                            "path": "children",
                                            "scope": "object"},
                                           {"name": "get_account_descendants",
                                            "path": "descendants",
-                                           "scope": "object"}])
+                                           "scope": "object"},
+                                          {"name": "get_account_siblings",
+                                           "path": "siblings"},
+                                          {"name": "get_account_tree",
+                                           "path": "tree"},
+                                          {"name": "get_account_parents",
+                                           "path": "parents"},
+                                          {"name": "get_account_apikey",
+                                           "path": "api_key"},
+                                          {"name": "demote_reseller",
+                                           "path": "reseller",
+                                           "method": "delete"},
+                                          {"name": "promote_reseller",
+                                           "path": "reseller",
+                                           "method": "put"},
+                                          {"name": "create_api_key",
+                                           "path": "api_key",
+                                           "method": "put"},
+                                          {"name": "move_account",
+                                           "method": "post",
+                                           "path": "move"}])
     """ 
     http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/acdc_call_stats
     http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/acdc_call_stats?created_from={FROM_TIMESTAMP}&created_to={TO_TIMESTAMP}
@@ -379,6 +399,35 @@ class Client(object):
         plural_name="apps_link",
         methods=['list'])
 
+
+    _apps_store_resource = RestResource(
+        "apps_store",
+        "/accounts/{account_id}/apps_store/{app_id}",
+        plural_name="apps_store",
+        exclude_methods=['partial_update'],
+        extra_views=[{
+            "name": "install_app",
+            "method": "put",
+            "path": "",
+            "scope": "object"
+        }, {
+            "name": "get_icon",
+            "path": "icon",
+            "scope": "object"
+        },{
+            "name": "get_screenshot",
+            "path": "screenshot/{screenshot_index}",
+            "scope": "object"
+        },{
+            "name": "get_blacklist",
+            "path": "blacklist"
+        },{
+            "name": "update_blacklist",
+            "path": "blacklist",
+            "method": "post"
+        }]
+    )
+
     """ 
     http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/blacklists
     Support GET,PUT, DELETE, POST, PATH methods
@@ -395,6 +444,61 @@ class Client(object):
         "/accounts/{account_id}/blacklists/{blacklist_id}"
     )
 
+    _braintree_resource = RestResource(
+        "braintree",
+        "/accounts/{account_id}/braintree/{ignored}",
+        plural_name="braintree",
+        methods=[],
+        extra_views=[{
+            "name": "get_client_token",
+            "path": "client_token"
+        },{
+            "name": "list_transactions",
+            "path": "transactions"
+        },{
+            "name": "list_addresses",
+            "path": "addresses"
+        },{
+            "name": "list_credits",
+            "path": "credits"
+        },{
+            "name": "list_cards",
+            "path": "cards"
+        },{
+            "name": "add_credits",
+            "path": "credits",
+            "method": "put"
+        },{
+            "name": "get_transaction",
+            "path": "transactions/{transaction_id}"
+        },{
+            "name": "add_cards",
+            "path": "cards",
+            "method": "put"
+        },{
+            "name": "get_address",
+            "path": "addresses/{ADDRESS_ID}"
+        },{
+            "name": "delete_address",
+            "path": "addresses/{ADDRESS_ID}",
+            "method": "delete"
+        },{
+            "name": "update_address",
+            "path": "addresses/{ADDRESS_ID}",
+            "method": "post"
+        },{
+            "name": "get_card",
+            "path": "cards/{CARD_ID}"
+        },{
+            "name": "delete_card",
+            "path": "cards/{CARD_ID}",
+            "method": "delete"
+        },{
+            "name": "update_card",
+            "path": "cards/{CARD_ID}",
+            "method": "post"
+        }]
+    )
 
     _bulk_resource = RestResource(
         "bulk",
@@ -591,6 +695,79 @@ class Client(object):
         "/accounts/{account_id}/directories/{directory_id}",
         plural_name="directories")
 
+    _fax_resource = RestResource(
+        "fax",
+        "/accounts/{account_id}/faxes/{fax_id}",
+        methods=['create'],
+        plural_name="faxes",
+        extra_views=[{
+            "name": "create_outgoing_fax",
+            "method": "put",
+            "path": "outgoing"
+        },{
+            "name": "list_outgoing_faxes",
+            "path": "outgoing"
+        },{
+            "name": "get_outgoing_fax",
+            "path": "outgoing/{fax_job_id}"
+        },{
+            "name": "list_outbox_faxes",
+            "path": "outbox"
+        },{
+            "name": "get_outbox_fax",
+            "path": "outbox/{fax_id}"
+        },{
+            "name": "resubmit_outbox_fax",
+            "method": "put",
+            "path": "outbox/{FAX_ID}"
+        },{
+            "name": "get_fax_payload",
+            "path": "outbox/{FAX_ID}/attachment"
+        },{
+            "name": "get_smtp_logs",
+            "path": "smtplog"
+        },{
+            "name": "get_smtp_log",
+            "path": "smtplog/{ATTEMPT_ID}"
+
+        },{
+            "name": "delete_outbox_fax",
+            "method": "delete",
+            "path": "outbox/{fax_id}"
+        },{
+            "name": "delete_outbox_payload",
+            "method": "delete",
+            "path": "outbox/{fax_id}/attachment"
+        },{
+            "name": "list_inbox_faxes",
+            "path": "inbox"
+        },{
+            "name": "get_inbox_fax",
+            "path": "inbox/{FAX_ID}"
+        },{
+            "name": "get_inbox_fax_payload",
+            "path": "inbox/{FAX_ID}/attachment"
+        },{
+            "name": "delete_inbox_fax",
+            "path": "inbox/{FAX_ID}",
+            "method": "delete"
+        },{
+            "name": "delete_inbox_fax_payload",
+            "path": "inbox/{FAX_ID}/attachment",
+            "method": "delete"
+        },{
+            "name": "list_incoming_faxes",
+            "path": "incoming"
+        },{
+            "name": "get_incoming_fax",
+            "path": "incoming/{fax_id}"
+        },{
+            "name": "resubmit_inbox_faxes",
+            "method": "put",
+            "path": "inbox/{FAX_ID}"
+        }]
+    )
+
     _faxboxes_resource = RestResource(
         "faxbox",
         "/accounts/{account_id}/faxboxes/{faxbox_id}",
@@ -653,15 +830,24 @@ class Client(object):
                                 ])
 
 
+    _hotdesks_resource = RestResource("hotdesk",
+                                    "/accounts/{account_id}/hotdesks/{ignored}",
+                                    methods=["list"])
+
     """ 
     http://{SERVER}:8000/v2/accounts/{ACCOUNT_ID}/cdrs
-    Support only GET methods
+    Support GET, POST methods
        Call:
            list_limits(account_id)
     """
     _limits_resource = RestResource("limit",
                                     "/accounts/{account_id}/limits/{ignored}",
-                                    methods=["list"])
+                                    methods=["list"],
+                                    extra_views=[{
+                                        "name" :"update_list",
+                                        "method": "post",
+                                        "path": ""
+                                    }])
 
     _local_resources_resource = RestResource(
         "local_resource",
@@ -679,7 +865,17 @@ class Client(object):
                                    "/accounts/{account_id}/menus/{menu_id}")
 
     _metaflow_resource = RestResource("metaflow",
-                                   "/accounts/{account_id}/metaflows/{metaflow_id}")
+                                   "/accounts/{account_id}/metaflows/{ignored}",
+                                    methods=['list'],
+                                    extra_views=[{
+                                        "name": "update_metaflows",
+                                        "method": "post",
+                                        "path": ""
+                                    },{
+                                        "name": "delete_metaflows",
+                                        "method": "delete",
+                                        "path": ""
+                                    }])
 
     _migration_resource = RestResource("migration",
                                       "/accounts/{account_id}/migrations/{migration_id}",
@@ -837,6 +1033,33 @@ class Client(object):
             "method": "post"
         }])
 
+
+    _security_resource = RestResource(
+        "security",
+        "/accounts/{account_id}/security/{ignored}",
+        plural_name="security",
+        methods=["list"],
+        extra_views=[
+            {"name": "update_security",
+             "path": "",
+             "method": "post"},
+            {"name": "delete_security",
+             "path": "",
+             "method": "delete"},
+            {"name": "partial_update_security",
+             "path": "",
+             "method": "patch"},
+            {"name": "list_attempts",
+             "path": "attempts"},
+            {"name": "get_attempt_id",
+             "path": "attempts/{attempt_id}"},
+            {"name": "list_auth_module",
+             "scope": "system",
+             "path": "security"}
+        ])
+
+
+
     _server_resource = RestResource(
         "server",
         "/accounts/{account_id}/servers/{server_id}",
@@ -854,18 +1077,57 @@ class Client(object):
 
     _services_resource = RestResource(
         "service",
-        "/accounts/{account_id}/service/{service_id}",
+        "/accounts/{account_id}/services/{service_id}",
         methods=["list"],
-        extra_views=[
-            {"name": "get_deployment",
-             "path": "deployment",
-             "scope": "object"},
-            {"name": "create_deployment",
-             "path": "deployment",
-             "scope": "object",
-             "method": "put"},
-            {"name": "get_server_log", "path": "log"}
-        ])
+        extra_views=[{
+            "name":"update_service",
+            "path": "",
+            "method": "post"
+        },{
+            "name": "get_audit_logs",
+            "path": "audit"
+        },{
+            "name": "get_plan",
+            "path": "plan"
+        },{
+            "name": "get_status",
+            "path": "status"
+        },{
+            "name": "update_status",
+            "path": "status",
+            "method": "post"
+        }])
+
+    _service_plan_resource = RestResource(
+        "service_plans",
+        "/accounts/{account_id}/service_plans/{plan_id}",
+        exclude_methods=['partial_update','create'],
+        extra_views=[{
+            "name": "create_plan",
+            "method": "post",
+            "path": ""
+        },{
+            "name": "override_plan",
+            "method": "post",
+            "path": ""
+        },{
+            "name": "get_current_plan",
+            "path": "current"
+        },{
+            "name": "list_available_plans",
+            "path": "available"
+        },{
+            "name": "get_available_plan",
+            "path": "available/{plan_id}"
+        },{
+            "name": "sync_plan",
+            "method": "post",
+            "path": "synchronization"
+        },{
+            "name": "reconsilate_plan",
+            "method": "post",
+            "path": "reconciliation"
+        }])
 
     _schema_resource = RestResource(
         "schema",
@@ -1033,6 +1295,10 @@ class Client(object):
         request = KazooRequest("/about", method="get")
         return self._execute_request(request)
 
+    def create_ip_auth(self):
+        request = KazooRequest("/ip_auth", method="put")
+        return self._execute_request(request)
+
     def search_phone_numbers(self, prefix, quantity=10):
         request = KazooRequest("/phone_numbers", get_params={
             "prefix": prefix,
@@ -1084,3 +1350,15 @@ class Client(object):
             path += i+'/'
         request = KazooRequest(path[:-1])
         return self._execute_request(request)
+
+    def search(self, data, multi=None, account_id=None):
+        path = 'search'
+        if account_id:
+            path = '/accounts/{account_id}/' + path
+        if multi:
+            path += '/multi'
+        for i in args:
+            path += i+'&'
+        request = KazooRequest(path[:-1])
+        return self._execute_request(request)
+
