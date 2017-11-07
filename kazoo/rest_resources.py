@@ -74,7 +74,7 @@ class RestResource(object):
     def get_list_request(self, **kwargs):
         relative_path = self.path.format(**kwargs)
         if kwargs['request_optional_args']:
-            relative_path = relative_path + '?' + self.dict_to_sting(kwargs['request_optional_args'])
+            relative_path = relative_path + '?' + self.dict_to_string(kwargs['request_optional_args'])
         return KazooRequest(relative_path)
 
     def get_object_request(self, **kwargs):
@@ -109,7 +109,7 @@ class RestResource(object):
         return KazooRequest(self._get_full_url(kwargs) + "/" + viewname,
                             method=view_desc["method"])
 
-    def dict_to_sting(self, in_dict):
+    def dict_to_string(self, in_dict):
         res = ''
         for key, value in in_dict.iteritems():
             res = res + key + '=' + value +'&'

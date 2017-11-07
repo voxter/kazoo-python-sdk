@@ -13,6 +13,7 @@ class RestClientMetaClass(type):
 
     def __init__(cls, name, bases, dct):
         super(RestClientMetaClass, cls).__init__(name, bases, dct)
+
         for key, value in dct.items():
             if hasattr(value, "plural_name"):
                 cls._add_resource_methods(key, value, dct)
@@ -148,6 +149,7 @@ class RestClientMetaClass(type):
         if request_type == 'get_list_request' and get_request_args:
             get_request_string = "self.{0}.{1}({2}, request_optional_args=optional_args)".format(
             resource_field_name, request_type, get_request_args)
+
         elif request_type:
             get_request_string = "self.{0}.{1}({2})".format(
                 resource_field_name, request_type, get_request_args)
@@ -560,8 +562,15 @@ class Client(object):
 
     _channel_resource = RestResource(
         "channel",
-        "/accounts/{account_id}/channel/{channel_id}",
-        exclude_methods=['delete'])
+        "/accounts/{account_id}/channels/{channel_id}",
+        methods=['list','detail','update'],
+        extra_views=[{
+            "name": "execute_command_on_channel",
+            "method": "put",
+            "path": "",
+            "scope": "object"
+        }]
+    )
 
     _clicktocall_resource = RestResource(
         "channel",
@@ -576,6 +585,10 @@ class Client(object):
             "scope": "object",
             "path": "connect",
             "method": "post"
+        },{
+            "name": "list_clicktocall_connects",
+            "scope": "object",
+            "path": "connect"
         }]
         )
 
@@ -671,12 +684,65 @@ class Client(object):
     _cdr_resource = RestResource(
         "cdr",
         "/accounts/{account_id}/cdrs/{cdr_id}",
-         methods=["list", "detail"])
+         methods=["list", "detail"],
+         extra_views=[{
+             "name": "list_interactions",
+             "path": "interaction"
+         },{
+             "name": "get_interaction",
+             "path": "legs/{INTERACTION_ID}"
+         }])
 
     _device_resource = RestResource(
         "device",
         "/accounts/{account_id}/devices/{device_id}",
-        extra_views=[{"name": "get_all_devices_status", "path": "status"}])
+        extra_views=[
+            {
+                "name": "get_all_devices_status",
+                "path": "status"
+            },{
+                "name": "reboot_device",
+                "scope": "object",
+                "method": "post",
+                "path": "sync"
+            },{
+                "name": "make_device_quickcall",
+                "scope": "object",
+                "path": "quickcall/{PHONE_NUMBER}"
+            },{
+                "name": "update_device_presence",
+                "method": "post",
+                "scope": "object",
+                "path": "presence"
+            },{
+                "name": "get_device_channels",
+                "scope": "object",
+                "path": "channels"
+            },{
+                "name": "get_device_ratelimits",
+                "scope": "object",
+                "path": "rate_limits"
+            },{
+                "name": "update_device_ratelimits",
+                "scope": "object",
+                "path": "rate_limits",
+                "method": "post"
+            },{
+                "name": "get_device_access_lists",
+                "scope": "object",
+                "path": "access_lists"
+            },{
+                "name": "delete_device_access_lists",
+                "scope": "object",
+                "path": "access_lists",
+                "method": "delete"
+            },{
+                "name": "update_device_access_lists",
+                "scope": "object",
+                "path": "access_lists",
+                "method": "post"
+
+    }])
 
 
     """ 
@@ -849,6 +915,52 @@ class Client(object):
                                         "path": ""
                                     }])
 
+    _list_resource = RestResource("list",
+                                    "/accounts/{account_id}/lists/{lists_id}",
+                                    extra_views=[{
+                                        "name": "list_entries",
+                                        "path": "entries",
+                                        "scope": "object"
+                                    },{
+                                        "name": "add_entry",
+                                        "path": "entries",
+                                        "method": "put",
+                                        "scope": "object"
+                                    },{
+                                        "name": "delete_entries",
+                                        "path": "entries",
+                                        "method": "delete",
+                                        "scope": "object"
+                                    },{
+                                        "name": "get_entry",
+                                        "path": "entries/{entry_id}",
+                                        "scope": "object"
+                                    },{
+                                        "name": "delete_entry",
+                                        "path": "entries/{entry_id}",
+                                        "method": "delete",
+                                        "scope": "object"
+                                    },{
+                                        "name": "replace_entry",
+                                        "path": "entries/{entry_id}",
+                                        "method": "post",
+                                        "scope": "object"
+                                    },{
+                                        "name": "update_entry",
+                                        "path": "entries/{entry_id}",
+                                        "method": "patch",
+                                        "scope": "object"
+                                    },{
+                                        "name": "get_vcard",
+                                        "path": "entries/{entry_id}/vcard",
+                                        "scope": "object"
+                                    },{
+                                        "name": "add_entry_photo",
+                                        "path": "entries/{entry_id}/photo",
+                                        "method": "post",
+                                        "scope": "object"
+                                    }])
+
     _local_resources_resource = RestResource(
         "local_resource",
         "/accounts/{account_id}/local_resources/{resource_id}")
@@ -857,9 +969,24 @@ class Client(object):
     _media_resource = RestResource("media",
                                    "/accounts/{account_id}/media/{media_id}",
                                    plural_name="media",
+                                   exclude_methods=['partial_update'],
                                    method_names={
                                        "list": "get_all_media"
-                                   })
+                                   },
+                                   extra_views=[{
+                                       "name" : "get_prompts",
+                                       "path": "prompts"
+                                   },{
+                                       "name": "list_languages",
+                                       "path": "languages"
+                                   },{
+                                       "name": "get_prompt",
+                                       "path": "prompts/{prompt_id}"
+                                   },{
+                                       "name": "get_media_file",
+                                       "path": "/raw",
+                                       "scope": "object"
+                                   }])
 
     _menus_resource = RestResource("menu",
                                    "/accounts/{account_id}/menus/{menu_id}")
@@ -910,19 +1037,55 @@ class Client(object):
         "phone_number",
         "/accounts/{account_id}/phone_numbers/{phone_number}",
         methods=["list", "update", "delete"],
-        extra_views=[
-            {"name":"activate_phone_number",
-             "path": "activate",
-             "scope": "object",
-             "method": "put"},
-            {"name": "reserve_phone_number",
-             "path": "reserve",
-             "scope": "object",
-             "method": "put"},
-            {"name": "add_port_in_number",
-             "path": "port",
-             "scope": "object",
-             "method": "put"}])
+        extra_views=[{
+            "name":"activate_phone_number",
+            "path": "activate",
+            "scope": "object",
+            "method": "put"
+        },{
+            "name": "reserve_phone_number",
+            "path": "reserve",
+            "scope": "object",
+            "method": "put"
+        },{
+            "name": "add_port_in_number",
+            "path": "port",
+            "scope": "object",
+            "method": "put"
+        },{
+            "name": "get_carriers_info",
+            "path": "carriers_info"
+        },{
+            "name": "list_classifiers",
+            "path": "classifiers"
+        },{
+            "name": "fix_issue",
+            "method": "post",
+            "path": "fix"
+        },{
+            "name": "get_locality_info",
+            "method": "post",
+            "path": "locality"
+        },{
+            "name": "check_phone_numbers_availability",
+            "method": "post",
+            "path": "check"
+        },{
+            "name": "update_numbers_collection",
+            "method": "post",
+            "path": "collection"
+        },{
+            "name": "partial_update_numbers_collection",
+            "method": "patch",
+            "path": "collection"
+        },{
+            "name": "add_numbers_collection",
+            "method": "put",
+            "path": "collection"
+        },{
+            "name": "list_numbers_collection",
+            "path": "collection"
+        }])
 
     _queues_resource = RestResource("queue",
                                     "/accounts/{account_id}/queues/{queue_id}",
@@ -982,7 +1145,11 @@ class Client(object):
         "presence",
         "/accounts/{account_id}/presence/{ext_id}",
         plural_name='presence',
-        methods=['list','update'])
+        methods=['list','update'],
+        extra_views=[{
+            "name": "get_presence_report",
+            "path": "report"
+        }])
 
     _rates_resource = RestResource("rates",
                                     "/accounts/{account_id}/rates/{rate_id}",
@@ -993,6 +1160,20 @@ class Client(object):
                                    },{
                                        "name": "number_rate",
                                        "path": "rates/number/{phone_number}"
+                                   }]
+                                   )
+
+    _rate_limits_resource = RestResource("rate_limits",
+                                   "/accounts/{account_id}/rate_limits/{ignored}",
+                                   methods=['lists'],
+                                   extra_views=[{
+                                       "name": "update_rate_limits",
+                                       "method": "post",
+                                       "path": ""
+                                   },{
+                                       "name": "delete_rate_limits",
+                                       "method": "delete",
+                                       "path": ""
                                    }]
                                    )
 
@@ -1150,6 +1331,47 @@ class Client(object):
         "skel",
         "/accounts/{account_id}/skels/{skel_id}")
 
+    _storage_resource = RestResource(
+        "storage",
+        "/accounts/{account_id}/storage/{ignored}",
+        methods=['list', 'create'],
+        extra_views=[{
+            "name": "create_storage_plan",
+            "method": "put",
+            "path": "plans"
+        },{
+            "name": "list_storage_plans",
+            "path": "plans"
+        },{
+            "name": "get_storage_plan",
+            "path": "plans/{plan_id}"
+        },{
+            "name": "update_storage_plan",
+            "path": "plans/{plan_id}",
+            "method": "post"
+        },{
+            "name": "partial_update_storage_plan",
+            "path": "plans/{plan_id}",
+            "method": "patch"
+        },{
+            "name": "delete_storage_plan",
+            "path": "plans/{plan_id}",
+            "method": "delete"
+        },{
+            "name": "delete_storage",
+            "path": "",
+            "method": "delete"
+        },{
+            "name": "update_storage",
+            "path": "",
+            "method": "post"
+        },{
+            "name": "partial_update_storage",
+            "path": "",
+            "method": "patch"
+        }]
+    )
+
     _temporal_rules_resource = RestResource(
         "temporal_rule",
         "/accounts/{account_id}/temporal_rules/{rule_id}")
@@ -1185,7 +1407,57 @@ class Client(object):
     _users_resource = RestResource(
         "user",
         "/accounts/{account_id}/users/{user_id}",
-        extra_views=[{"name": "get_hotdesk", "path": "hotdesks"}])
+        extra_views=[
+            {
+                "name": "get_hotdesk",
+                "path": "hotdesks"
+            },{
+                "name": "get_user_cdrs",
+                "path": "cdrs"
+            },{
+                "name": "get_photo",
+                "path": "photo",
+                "scope": "object"
+            },{
+                "name": "update_photo",
+                "path": "photo",
+                "scope": "object",
+                "method": "post"
+            },{
+                "name": "delete_photo",
+                "path": "photo",
+                "scope": "object",
+                "method": "delete"
+            },{
+                "name": "get_vcard",
+                "path": "vcard",
+                "scope": "object"
+            },{
+                "name": "user_quickcall",
+                "path": "quickcall/{PHONE_NUMBER}",
+                "scope": "object"
+            },{
+                "name": "update_user_presence",
+                "path": "presence",
+                "method": "post",
+                "scope": "object"
+            },{
+                "name": "list_user_channels",
+                "path": "channels",
+                "scope": "object"
+            },{
+                "name": "list_user_devices",
+                "path": "devices",
+                "scope": "object"
+            },{
+                "name": "list_user_recordings",
+                "path": "recordings",
+                "scope": "object"
+            },{
+                "name": "list_user_groups",
+                "path": "groups",
+                "scope": "object"
+            }])
 
     _vmbox_resource = RestResource(
         "voicemail_box",
@@ -1209,7 +1481,7 @@ class Client(object):
             "scope": "object",
             "path": "attempts"
         },{
-            "name": "enbale_webhooks",
+            "name": "enable_webhooks",
             "path": "",
             "method": "patch"
         },{
@@ -1344,6 +1616,22 @@ class Client(object):
         request.auth_required = True
         return self._execute_request(request, account_id=parentAccountId)
 
+    def delete_numbers_collection(self, acct_id=None, del_data=None):
+        if not acct_id:
+            acct_id = self.account_id
+        path= "/accounts/{account_id}/phone_numbers/collection"
+        request = KazooRequest(path, method="delete")
+        return self._execute_request(request, account_id=account_id, data=del_data )
+
+    def list_numbers_by_prefix(self, acct_id=None, prefix_data=None):
+        if not acct_id:
+            acct_id = self.account_id
+
+        path = self.dict_to_string(prefix_data)
+        path = "/accounts/{account_id}/phone_numbers/prefix?" + path
+        request = KazooRequest(path)
+        return self._execute_request(request, account_id=acct_id)
+
     def run_sup_command(self, *args):
         path='/sup/'
         for i in args:
@@ -1351,14 +1639,21 @@ class Client(object):
         request = KazooRequest(path[:-1])
         return self._execute_request(request)
 
-    def search(self, data, multi=None, account_id=None):
+    def search(self, data, multi=None, acct_id=None):
         path = 'search'
-        if account_id:
+        if acct_id:
             path = '/accounts/{account_id}/' + path
         if multi:
             path += '/multi'
-        for i in args:
-            path += i+'&'
-        request = KazooRequest(path[:-1])
-        return self._execute_request(request)
 
+        for i in data:
+            path += i+'&'
+
+        request = KazooRequest(path[:-1])
+        return self._execute_request(request, account_id=acct_id)
+
+    def dict_to_string(self, in_dict):
+        res = ''
+        for key, value in in_dict.iteritems():
+            res = res + key + '=' + value +'&'
+        return res[:-1]

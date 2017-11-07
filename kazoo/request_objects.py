@@ -10,7 +10,6 @@ from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
 import ssl
 
-import pprint
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
