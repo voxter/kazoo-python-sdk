@@ -1,7 +1,7 @@
 from kazoo.request_objects import KazooRequest
 import re
 
-method_types = ["detail", "list", "update", "create", "delete"]
+method_types = ["detail", "list", "update", "create", "delete", "partial_update"]
 
 
 class RestResource(object):
@@ -25,6 +25,7 @@ class RestResource(object):
             "list": "get_{0}".format(self.plural_name),
             "object": "get_{0}".format(self.name),
             "update": "update_{0}".format(self.name),
+            "partial_update": "partial_update_{0}".format(self.name),
             "create": "create_{0}".format(self.name),
             "delete": "delete_{0}".format(self.name),
         }
@@ -72,6 +73,8 @@ class RestResource(object):
 
     def get_list_request(self, **kwargs):
         relative_path = self.path.format(**kwargs)
+        if kwargs['request_optional_args']:
+            relative_path = relative_path + '?' + self.dict_to_string(kwargs['request_optional_args'])
         return KazooRequest(relative_path)
 
     def get_object_request(self, **kwargs):
@@ -79,6 +82,9 @@ class RestResource(object):
 
     def get_update_object_request(self, **kwargs):
         return KazooRequest(self._get_full_url(kwargs), method='post')
+
+    def get_partial_update_object_request(self, **kwargs):
+        return KazooRequest(self._get_full_url(kwargs), method='patch')
 
     def get_delete_object_request(self, **kwargs):
         return KazooRequest(self._get_full_url(kwargs), method='delete')
@@ -96,11 +102,22 @@ class RestResource(object):
         if view_desc["scope"] == "aggregate":
             return KazooRequest(self.path.format(**kwargs) + "/" + viewname,
                                 method=view_desc["method"])
+        if view_desc["scope"] == "system":
+            return KazooRequest("/" + viewname,
+                                method=view_desc["method"])
+
         return KazooRequest(self._get_full_url(kwargs) + "/" + viewname,
                             method=view_desc["method"])
+
+    def dict_to_string(self, in_dict):
+        res = ''
+        for key, value in in_dict.iteritems():
+            res = res + key + '=' + value +'&'
+        return res[:-1]
 
     @property
     def plural_name(self):
         if self._plural_name:
             return self._plural_name
         return self.name + "s"
+

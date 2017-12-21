@@ -10,6 +10,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
 import ssl
 
+
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -22,7 +23,7 @@ class HttpsAdapterHack(HTTPAdapter):
                                        ssl_version=ssl.PROTOCOL_TLSv1)
 
 class KazooRequest(object):
-    http_methods = ["get", "post", "put", "delete"]
+    http_methods = ["get", "post", "put", "delete", "patch"]
 
     def __init__(self, path, auth_required=True, method='get', get_params=None):
         """An object which takes a path and determines required
@@ -71,17 +72,21 @@ class KazooRequest(object):
             if param_name not in kwargs:
                 raise ValueError("keyword argument {0} is required".format(
                     param_name))
+
         full_url = self._get_url(kwargs, base_url)
         logger.debug("Making {0} request to url {1}".
                      format(method, full_url.encode("utf-8")))
+
         headers = self._get_headers(token=token)
         req_func = getattr(requests, method)
+
         kwargs = {}
         if data:
             kwargs["data"] = json.dumps({"data": data})
         if files:
             kwargs["files"] = files
         raw_response = req_func(full_url, headers=headers, **kwargs)
+
         if base_url.startswith('https'):
             s = requests.Session()
             s.mount('https://', HttpsAdapterHack())
