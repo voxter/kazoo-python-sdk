@@ -159,14 +159,14 @@ class RestClientMetaClass(type):
                 resource_field_name, extra_view_name, get_request_args)
 
         if requires_data:
-            func_definition = "def {0}(self, {1}): return self._execute_request({2}, data=data)".format(
+            func_definition = "def {0}(self, {1} **kwargs): return self._execute_request({2}, data=data, **kwargs)".format(
                 func_name, required_args_str, get_request_string)
         else:
             if request_type == 'get_list_request' and get_request_args:
-                func_definition = "def {0}(self, {1} optional_args=None): return self._execute_request({2} )".format(
+                func_definition = "def {0}(self, {1} optional_args=None, **kwargs): return self._execute_request({2}, **kwargs )".format(
                     func_name, required_args_str, get_request_string)
             else:
-                func_definition = "def {0}(self, {1}): return self._execute_request({2})".format(
+                func_definition = "def {0}(self, {1} **kwargs): return self._execute_request({2}, **kwargs)".format(
                     func_name, required_args_str, get_request_string)
 
         func = compile(func_definition, __file__, 'exec')
