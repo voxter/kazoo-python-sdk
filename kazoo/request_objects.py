@@ -73,6 +73,7 @@ class KazooRequest(object):
                 raise ValueError("keyword argument {0} is required".format(
                     param_name))
 
+        self.get_params = {**self.get_params, **kwargs.get('get_params', {})}
         full_url = self._get_url(kwargs, base_url)
         logger.debug("Making {0} request to url {1}".
                      format(method, full_url.encode("utf-8")))
