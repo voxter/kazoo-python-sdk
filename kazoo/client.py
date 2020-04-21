@@ -1456,6 +1456,10 @@ class Client(metaclass=RestClientMetaClass):
                 "name": "list_user_groups",
                 "path": "groups",
                 "scope": "object"
+            },{
+                "name": "list_user_queues",
+                "path": "queues",
+                "scope": "object"
             }])
 
     _vmbox_resource = RestResource(
