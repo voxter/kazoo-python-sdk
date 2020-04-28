@@ -25,7 +25,7 @@ class HttpsAdapterHack(HTTPAdapter):
 class KazooRequest(object):
     http_methods = ["get", "post", "put", "delete", "patch"]
 
-    def __init__(self, path, auth_required=True, method='get', get_params=None):
+    def __init__(self, path, auth_required=True, method='get', get_params={}):
         """An object which takes a path and determines required
         parameters from it, these parameters must be passed to the execute
         method of the object
